@@ -45,11 +45,16 @@ class Base:
         self.create_widgets()
 
 
+        self.window.show_all()
+
+
     def create_widgets(self):
+
 
 
         self.label1 = gtk.Label("Encrypted Volume Path")
         self.label2 = gtk.Label("Mount Point Path")
+        self.label3 = gtk.Label("Password")
 
         # Encryption path text box
         #
@@ -70,22 +75,46 @@ class Base:
 
 
         # Mount button
-        self.button_mount = gtk.Button("Mount")
+        self.button_mount = gtk.Button("Open")
         self.button_mount.set_tooltip_text("Mount encrypted volume")
         self.button_mount.connect("clicked", self.open_encrypted)
 
         # Unumount button
-        self.button_umount = gtk.Button("Mount")
+        self.button_umount = gtk.Button("Close")
         self.button_umount.set_tooltip_text("Mount encrypted volume")
         self.button_umount.connect("clicked", self.close_encrypted)
 
 
         # Button1
         # Declare widget
-        self.button1 = gtk.Button("EXIT")
-        self.button1.set_tooltip_text("Close the main window")
-        self.button1.connect("clicked", self.destroy)
+        self.button_exit = gtk.Button("EXIT")
+        self.button_exit.set_tooltip_text("Close the main window")
+        self.button_exit.connect("clicked", self.destroy)
 
+        vbox = gtk.VBox(spacing=10)
+
+        hbox1 = gtk.HBox(spaing=10)
+        hbox1.pack_start(self.label1)
+        hbox1.pack_start(self.entry_enc)
+
+        hbox2 = gtk.HBox(spacing=10)
+        hbox2.pack_start(self.label2)
+        hbox2.pack_start(self.entry_mnt)
+
+        hbox3 = gtk.HBox(spacing=10)
+        hbox3.pack_start(self.label3)
+        hbox3.pack_start(self.entry_pass)
+
+        hbox4 = gtk.HBox(spacing=10)
+        hbox4.pack_start(self.button_mount)
+        hbox4.pack_start(self.button_umount)
+
+
+        vbox.pack_start(hbox1)
+        vbox.pack_start(hbox2)
+        vbox.pack_start(hbox3)
+        vbox.pack_start(hbox4)
+        vbox.pack_start(self.button_exit)
 
 
         #self.filechooser = gtk.FileChooserDialog\
@@ -94,19 +123,19 @@ class Base:
 
 
         # Create container to button
-        fixed = gtk.Fixed()
-        fixed.put(self.button1, 0, 200)
-        fixed.put(self.entry_enc, 100, 30)
-        fixed.put(self.entry_mnt, 100, 50)
-        fixed.put(self.entry_pass, 100, 70)
-        fixed.put(self.button_mount, 0, 0)
-        fixed.put(self.button_umount,0 ,30)
+        #fixed = gtk.Fixed()
+        #fixed.put(self.button_exit, 0, 200)
+        #fixed.put(self.entry_enc, 100, 30)
+        #fixed.put(self.entry_mnt, 100, 50)
+        #fixed.put(self.entry_pass, 100, 70)
+        #fixed.put(self.button_mount, 0, 0)
+        #fixed.put(self.button_umount,0 ,30)
 
 #        fixed.put(self.filechooser, 50, 30)
-
-        self.window.add(fixed) # Add fixed container to main window
+        self.window.add(vbox) # Add fixed container to main window
         # Show main window
-        self.window.show_all()
+
+
 
     def main(self):
         gtk.main()
