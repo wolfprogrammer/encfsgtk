@@ -184,10 +184,12 @@ class Encfs():
         import os
         os.chdir(self.plaindir)
 
-    def close(self):
+    def close(self, mnt=""):
         """
         Unmount encrypted directory
         """
+
+
         from subprocess import Popen, PIPE, STDOUT
         proc = Popen(["fusermount", "-uz" ,self.plaindir])
 

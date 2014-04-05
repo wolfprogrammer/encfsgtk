@@ -256,7 +256,6 @@ class Base:
         #print "name =", name
 
 
-
         if os.path.exists(self.configfile):
             d = shelve.open(self.configfile)
             volumes = d['volumes']
@@ -271,6 +270,9 @@ class Base:
                 self.entry_enc.set_text(enc)
                 self.entry_mnt.set_text(mnt)
                 self.entry_pass.set_text(password)
+
+                self.enc = Encfs()
+                self.enc.open(enc, mnt, password, mount=False)
 
                 if password !="":
                     # Mark the button save as active
@@ -307,7 +309,6 @@ class Base:
 
         d['volumes'] = volumes
         d.close()
-
 
 
 if __name__ == "__main__":
