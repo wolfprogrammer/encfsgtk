@@ -36,6 +36,8 @@ def get_resource_path(rel_path):
 
 
 
+
+
 class Base:
     """
     Main window class
@@ -151,9 +153,15 @@ class Base:
         #vbox = gtk.VBox(spacing=10, homogeneous=True)
         vbox = gtk.VBox(spacing=10)
 
+        self.label0.set_alignment(0, 0.5)
+        self.label1.set_alignment(0, 0.5)
+        self.label2.set_alignment(0, 0.5)
+        self.label3.set_alignment(0, 0.5)
+
         hbox0 = gtk.HBox(spacing=10, homogeneous=True)
         hbox0.pack_start(self.label0, expand=True, fill=True)
         hbox0.pack_start(self.combo, expand=True, fill=True)
+
 
         hbox1 = gtk.HBox(spacing=10, homogeneous=True)
         hbox1.pack_start(self.label1, expand=True, fill=True)
@@ -299,7 +307,6 @@ class Base:
 
         d['volumes'] = volumes
         d.close()
-
 
 
 
