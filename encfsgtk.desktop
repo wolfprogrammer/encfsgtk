@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=EcnfsGtk
+Comment=Encfs Wizard -- Helps you to protect your data and privacy.
+Exec=/home/tux/bin/encfsgtk.py
+Icon=/home/tux/bin/encfsgtk.png
+Categories=Application

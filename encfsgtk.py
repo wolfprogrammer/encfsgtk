@@ -53,9 +53,9 @@ class Base:
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
         #self.window.set_size_request(500, 500)
-        self.window.set_title("Encfs Front End")
+        self.window.set_title("EncfsGtk")
         self.window.connect("destroy", self.destroy)
-        self.window.set_icon_from_file(get_resource_path("icon.jpeg"))
+        self.window.set_icon_from_file(get_resource_path("encfsgtk.png"))
 
         # Encrypted volumes
         self.volumes = []
@@ -139,6 +139,11 @@ class Base:
         self.button_save.set_tooltip_text("Save all data")
         self.button_save.connect("clicked", self.save_data)
 
+        self.button_remove = gtk.Button("Remove")
+        self.button_remove.set_tooltip_text("Remove volume from list, but don't delete it.")
+        self.button_remove.connect("clicked", self.remove_data)
+
+
         # Button exit
         # Declare widget
         self.button_exit = gtk.Button("EXIT")
@@ -186,7 +191,11 @@ class Base:
 
         hbox5 = gtk.HBox(spacing=10, homogeneous=True)
         hbox5.pack_start(self.button_save)
-        hbox5.pack_start(self.button_exit)
+        hbox5.pack_start(self.button_remove)
+
+        hbox6 = gtk.HBox(spacing=10, homogeneous=True)
+        hbox6.pack_start(self.button_exit)
+
 
 
         vbox.pack_start(hbox0)
@@ -196,6 +205,7 @@ class Base:
         vbox.pack_start(vbox1)
         vbox.pack_start(hbox4)
         vbox.pack_start(hbox5)
+        vbox.pack_start(hbox6)
 
         self.window.add(vbox) # Add fixed container to main window
         # Show main window
@@ -253,13 +263,21 @@ class Base:
         import shelve
 
         name = self.combo.get_active_text()
-        #print "name =", name
+
 
 
         if os.path.exists(self.configfile):
             d = shelve.open(self.configfile)
             volumes = d['volumes']
             #print "volumes =", str(volumes)
+
+            #print "p1"
+
+            # Repopulate combox
+           # entries = volumes.keys()
+
+            #for e in entries:
+            #    self.combo.append_text(e)
 
 
             if volumes.has_key(name):
@@ -309,6 +327,31 @@ class Base:
 
         d['volumes'] = volumes
         d.close()
+
+    def remove_data(self, widgt, data=None):
+
+        import shelve
+        d = shelve.open(self.configfile)
+
+        if d.has_key('volumes'):
+            volumes = d['volumes']
+        else:
+            return
+
+        name= self.combo.get_active_text()
+        #if volumes.has_key(name):
+        #    volumes.remove(name)
+
+        try:
+            del volumes[name]
+        except:
+            pass
+
+        d['volumes'] = volumes
+        d.close()
+
+
+
 
 
 if __name__ == "__main__":
