@@ -35,9 +35,6 @@ def get_resource_path(rel_path):
     return abs_path_to_resource
 
 
-
-
-
 class Base:
     """
     Main window class
@@ -78,6 +75,7 @@ class Base:
         self.label1 = gtk.Label("Encrypted Volume Path")
         self.label2 = gtk.Label("Mount Point Path")
         self.label3 = gtk.Label("Password")
+        self.label4 = gtk.Label("Command after opened")
 
         self.combo = gtk.combo_box_entry_new_text()
         self.combo.connect("changed", self.combo_text_changed)
@@ -112,6 +110,11 @@ class Base:
         self.entry_pass = gtk.Entry()
         self.entry_pass.set_tooltip_text("Encryption volume password")
         self.entry_pass.set_visibility(False)
+
+        # Command entry
+        self.entry_cmd_opened = gtk.Entry()
+        self.entry_cmd_opened.set_tooltip_text("Command to be executed after the volume be opened")
+
 
 
         self.check1 = gtk.CheckButton(label="Open volume in file manager")
@@ -162,6 +165,7 @@ class Base:
         self.label1.set_alignment(0, 0.5)
         self.label2.set_alignment(0, 0.5)
         self.label3.set_alignment(0, 0.5)
+        self.label4.set_alignment(0, 0.5)
 
         hbox0 = gtk.HBox(spacing=10, homogeneous=True)
         hbox0.pack_start(self.label0, expand=True, fill=True)
@@ -179,6 +183,10 @@ class Base:
         hbox3 = gtk.HBox(spacing=10, homogeneous=True)
         hbox3.pack_start(self.label3)
         hbox3.pack_start(self.entry_pass)
+
+        hbox7 = gtk.HBox(spacing=10, homogeneous=True)
+        hbox7.pack_start(self.label4)
+        hbox7.pack_start(self.entry_cmd_opened)
 
         vbox1 = gtk.VBox(spacing=10)
         vbox1.pack_start(self.check1)
@@ -201,6 +209,7 @@ class Base:
         vbox.pack_start(hbox0)
         vbox.pack_start(hbox1)
         vbox.pack_start(hbox2)
+        vbox.pack_start(hbox7)
         vbox.pack_start(hbox3)
         vbox.pack_start(vbox1)
         vbox.pack_start(hbox4)
@@ -226,7 +235,7 @@ class Base:
 
     def open_encrypted(self, widget, data=None):
 
-
+        from subprocess import Popen, PIPE
 
         #print "Mounting encrypted volume"
         #print "Encrypted", self.entry_enc.get_text()
@@ -235,12 +244,17 @@ class Base:
         encp = self.entry_enc.get_text()
         mntp = self.entry_mnt.get_text()
         password = self.entry_pass.get_text()
+        cmdo = self.entry_cmd_opened.get_text()
 
         if password == "":
             return
 
         self.enc = Encfs()
         status = self.enc.open(encp, mntp, password)
+
+        if cmdo !="":
+            Popen(cmdo, shell=True, stdin=PIPE, stderr=PIPE, stdout=PIPE)
+
         #print "--------opened -----------"
 
                 #if self.check_reverse.get
@@ -285,16 +299,24 @@ class Base:
                 enc = data['enc']
                 mnt = data['mnt']
                 password = data['password']
+                cmdo = data['cmdo']
                 self.entry_enc.set_text(enc)
                 self.entry_mnt.set_text(mnt)
                 self.entry_pass.set_text(password)
-
+                self.entry_cmd_opened.set_text(cmdo)
                 self.enc = Encfs()
                 self.enc.open(enc, mnt, password, mount=False)
 
                 if password !="":
                     # Mark the button save as active
                     self.check_save.set_active(gtk.TRUE)
+
+            else:
+                self.entry_enc.set_text("")
+                self.entry_mnt.set_text("")
+                self.entry_pass.set_text("")
+                self.entry_cmd_opened.set_text("")
+
 
     def save_data(self, widgt, data=None):
 
@@ -309,13 +331,15 @@ class Base:
         name= self.combo.get_active_text()
         enc = self.entry_enc.get_text()
         mnt = self.entry_mnt.get_text()
+        cmdo = self.entry_cmd_opened.get_text()
 
 
         name = str(name)
         enc  = str(enc)
         mnt  = str(mnt)
+        cmdo = str(cmdo)
 
-        data = { 'enc': enc, 'mnt': mnt}
+        data = { 'enc': enc, 'mnt': mnt, 'cmdo': cmdo}
 
         if self.check_save.get_active():
             password = self.entry_pass.get_text()
@@ -349,10 +373,6 @@ class Base:
 
         d['volumes'] = volumes
         d.close()
-
-
-
-
 
 if __name__ == "__main__":
     base = Base()
