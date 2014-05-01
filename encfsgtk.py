@@ -23,6 +23,9 @@ import gtk
 
 from encfs import Encfs
 
+
+
+
 def get_resource_path(rel_path):
     """
     Return absolute path of file in the same
@@ -52,7 +55,19 @@ class Base:
         #self.window.set_size_request(500, 500)
         self.window.set_title("EncfsGtk")
         self.window.connect("destroy", self.destroy)
-        self.window.set_icon_from_file(get_resource_path("encfsgtk.png"))
+
+        import tempfile
+        import base64
+        icondata = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAIAAABuYg/PAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAASAAAAEgARslrPgAACIFJREFUSMftV0tvG9cVvo+5M8MZjkiRkkjKIiVHlhxbkqM4ShrFAZqkL9eAN5YBO+0uG3fhH9BF0RookP6ColkUhVEgLYqkKNo0QIOgaYW6RuLYtKNIlhxbpiJKlkiJIjlDzvM+urgOLQl1Fn2tehYEZsiZ737nfOc7h1AIAf5Xoey+6ABDCP8bYPBxzDjn/+IbH3NQCKHS4QQhXF5enpubUxQFADA2NqZpWudh+EUghOSPOw/K4JzLz87N3amilBJC9oDdvHmzWCzGYrGenp5CodBoNAAAhBCEEMYYYwwh5JwjhDpgEEIhBPsioiiilIZhSClljFFKOeeqqnLOH4E9LKCi6LquqipCyLbtIAiEEL7vy2/DMMQYp1IpzpgQgAvOOWe7glIaRZHEC4IgDMMoilzXpZSOj49nMpn9AunkhFIKAHj99deLxaJhGEEQDA4Onj59+tSpUwrCQggAAeNc0oqoZMIYpYxRz/NSqZQkCiEsl8tBEGCM0ePUEUWR53mlUsm27c3NzWw2e+HCBXl8xhhnjFImM8Y514liGWqXoSUsw2k5pVLJf8gsDMNQURRVVR8JZJ9sJDOZaADAkSNHLl68qGkahFDBCoAQQAhYBIEwYkboexvNsBHiECAdQqfWNExDhbzFgRAQASHLjDHeDyb1Qyn1PI8xJtU1Ojo6ODhYLpcRQgACAAFjDCqqBvnSSmW+TlwlDrBGIQw37uep0wJ6/mBP3K077YBD6Pv+9vb2gQMHlH2cAAAIIcdx7ty5AwCIoggAIIvcUaBkHIvF/nx9cbERw8lsI2TAbTNstLYr/SlteRuLiv7V/gzxVhw/HBkZsSzLtu09NetIPAzDVqvluq7v+8lk8vjx481mEyEEIISACy5iinpjceFWFavJwtpO8956zWcgqUbPH84wQdcCZaOFrz7AiaQBGRcQIgQRQso+MEVRZD9RSlVVbbVaZ86cOXHixHvvvTc1NSUEV7CGoFiprHy0QtqxA1v1OvTBy33+d17q55y22LGB1HPmx9UPPt2JQjLUndY0W3AOAUD7aoYQIoRIUURRJIRIJpNvvvnm7du3z58/zxhTsFLZ2qw161AQQpTQdbaa4fdeTJ88mnt3of3OUmCRpqnpP5h5stZe+Wjx/r2E9XQiBhgXAEII96RRUZQOmJQ4xhgAkMlkDh8+HEURxpjR6NaNW5/cvJkTa89ppZfMldFePFeNfnHNqbXooSy8uuL8+PefnTrWvV6n9zZDiOIIQgB3eWNHGqqqSgeR/YgQko4l/Ywx1ps5UMgP/PZPf9/+cEkzlJH+ZOzbX5kthRWPJXWlr8tSRKW45o+adz1KbTcUAn1BaW+fYYwlM4QQ57xjg/IoQgCMUcNuTk6M3Qcj7843Fu8vHuuJD/dnmp/tIMQ3Gw2OEgfz6l8/2ab93nROaHETIRcw6csC7W4vKRBCCMZY3tl7KSBEglHKgKooOJaMDx5bXF5d31h/IqPfu1et++QnvytlOD7Wb6D2Tnz1yhH4abWyihUsnRDtS6PUSMfXJVeZTAChEAJAFAVuX0LVhdttxObX3Z//8jfnns+/8kzWc1wnYG/Pbb/2Qs87xfJbNyuzH8/tbG9GlMpJo1BKXddttVq2bVerVU3TJKQ8AcZYURQ54SAAgnNd16vbayMDg+T6FmLEz0z97A+/VrVL3//Gqek+kxAy3qu+dfX+dTz9zDenv3WUd4dreszQNZ0xpgRB8Pnnny8vL1+5csWyrMnJSamLzrTEGHemNhfC0HXH40OkPTnU/WHJ7csf9NHpn77zF6fZCpDq4a4/1vWSemgo0/VUxh+Kt9fLYenah1Y8/uyzzyJVVWOxmOu6q6ur9Xq9M4jlrJEsLcuSeBAiSoOeTG7+VvG1FwsWbg+aNDU0Mf7C1wZHj769pPxqbWQjeexwLjFitp/OeNWNsmHG7ywtzc/P9/X1IUJILpfL5/OFQmF5ebnZbMrekiW0bXtmZubcuXPXr18nhEAIaBj1pJI+1NYXr/7w3PEuFKlufbKXbzt+96Gpp58cKMRh1hBfz/tRfZUJxDkbGxs7e/bsw3lmmubw8PDExITrusViUXaVlKhhGHNzc5cvX5ZjGgDAIfI97+iRkVJlZ3P+bz86M35qRMuaYMdxB7vJeDp6pUBf6tsGzVJEMYQICCEtN4qih2rMZDKTk5MTExM3btyo1+tS63KHKRaL9Xp9eno6CAIIoeBcCBH4/uRTT7Xc8NoHbz9BVmMYH7DU7x4Np417vf6SaK5j1SAqUTByPU+uF5xzfOnSJVmb7u5uhNC1a9eEEKlUamNjQ1XVVCql63oulxsYGOCct9vtgYGBh6tAGKR70sTsajSbuhZD3KdhSyAUN7qIbrpB1KhtlVbuq6o2Ojoaj8cfDk8pB03TTpw4cfv27ffff980TU3TwjBMpVKEkLt3787Ozp48ebJSqXQYMyEC19UwGn5imHMuQM6xnVqtdrf8oNHYoRFVCMlms4cOHerq6gIAWJb1yBuFEIlE4tVXX11ZWSkWi0NDQ3KjopTqur66ujo7O1soFDoqVQnBCLXb7a0HD8rlcqlUqlarnPNUKpXP5588cvTw6GihUEgmk4lEIhaLYYz3bMRS9AsLC2+88Ua5XPZ9P4oiuSS5rquq6szMzNTUVBAEjuPUarWNjY3Nzc12u00IyWazQ0NDw8PD+Xw+k8lYliWtYM/L963fEm9ra2thYWF9fb1Wq7VarSAIOOcQwv7+flVVbdsOw1AIYZpmOp3OZrO5XC6dTluWJY109y4Mdi3kj931AQBBELiu6ziObdu2bTebTdu2Pc/TNC2ZTPb29qbTaZkiOZVkLb7kT8k/B5M3dy/0URSFYeh5XhAEiqKYpmkYRqf9d2cFPD6+jNl/PNC//4r/gwHwDzRnI0x289r/AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE0LTA0LTA1VDIyOjAxOjQ0LTAzOjAwb/Bg+QAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0wNC0wNVQyMjowMTo0NC0wMzowMB6t2EUAAAARdEVYdGpwZWc6Y29sb3JzcGFjZQAyLHVVnwAAACB0RVh0anBlZzpzYW1wbGluZy1mYWN0b3IAMngyLDF4MSwxeDFJ+qa0AAAAAElFTkSuQmCC"
+
+
+        with  tempfile.NamedTemporaryFile(suffix=".png", delete=True) as temp:
+            icon = temp.name
+            fp = open(icon, "wb")
+            fp.write(base64.b64decode(icondata))
+            fp.close()
+            self.window.set_icon_from_file(icon)
+        #self.window.set_icon_from_file("icon.png")
 
         # Encrypted volumes
         self.volumes = []
