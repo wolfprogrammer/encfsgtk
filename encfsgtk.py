@@ -16,6 +16,7 @@ pygtk.require('2.0')
 import gtk
 
 import os
+import signal
 import logging
 import logging.config
 LOG_SETTINGS = {
@@ -104,6 +105,14 @@ from encfs import Encfs
 
 
 
+def erro_mbox(erro_message, parent=None):
+    message = gtk.MessageDialog(parent=parent,type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE)
+    message.set_markup(erro_message)
+    message.run()
+
+
+
+
 def get_resource_path(rel_path):
     """
     Return absolute path of file in the same
@@ -114,6 +123,30 @@ def get_resource_path(rel_path):
     rel_path_to_resource = os.path.join(dir_of_py_file, rel_path)
     abs_path_to_resource = os.path.abspath(rel_path_to_resource)
     return abs_path_to_resource
+
+
+
+
+def msgbox_error( msg, title = "gtkBuilder Selector"):
+    import gtk
+
+    dlg = gtk.MessageDialog( type = gtk.MESSAGE_ERROR, buttons = gtk.BUTTONS_CLOSE )
+    dlg.set_title( title )
+    dlg.set_markup( msg )
+    dlg.run()
+    dlg.destroy()
+
+
+def msgbox_ok(msg, title):
+    import gtk
+
+    dlg = gtk.MessageDialog( type = gtk.MESSAGE_INFO, buttons = gtk.BUTTONS_OK )
+    dlg.set_title( title )
+    dlg.set_markup( msg )
+    dlg.run()
+    dlg.destroy()
+
+
 
 
 class Base:
@@ -336,9 +369,9 @@ class Base:
         """
         #print "App closed"
 
-
         if self.user_process is not None:
-            self.user_process.kill()
+            pid = self.user_process.pid
+            os.killpg(pid, signal.SIGTERM)
 
         logger.info("Quit application")
         gtk.main_quit()
@@ -367,8 +400,15 @@ class Base:
 
         logger.debug("status : %s" % status)
 
+        if not status:
+            msgbox_error("Error: Wrong password.","ERRO")
+
+            return
+        else:
+            msgbox_ok("Password OK!", "INFO")
+
         if cmdo !="":
-            self.user_process = Popen(cmdo, shell=True)
+            self.user_process = Popen(cmdo, shell=True, preexec_fn=os.setsid)
             logger.debug("self.user_process.pid = " %  self.user_process.pid)
 
         #print "--------opened -----------"
@@ -387,8 +427,16 @@ class Base:
         #print "Mounted", self.entry_mnt.get_text()
         logger.info("Closing encrypted volume")
 
+        # Clean password if save-password not check
+        if not self.check_save.get_active():
+            self.entry_pass.set_text("")
+
+
         if self.user_process is not None:
-            self.user_process.kill()
+
+            pid = self.user_process.pid
+            os.killpg(pid, signal.SIGTERM)
+            #self.user_process.kill()
 
         self.enc.close()
 
