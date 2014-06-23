@@ -373,6 +373,8 @@ class Base:
             pid = self.user_process.pid
             os.killpg(pid, signal.SIGTERM)
 
+        self.enc.close()
+
         logger.info("Quit application")
         gtk.main_quit()
 
