@@ -15,6 +15,84 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
+import os
+import logging
+import logging.config
+LOG_SETTINGS = {
+    # --------- GENERAL OPTIONS ---------#
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    # ---------- LOGGERS ---------------#
+    'root': {
+        'level': 'NOTSET',
+        'handlers': ['filecsv', 'file', 'console'],
+    },
+
+    # ---------- HANDLERS ---------------#
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+            'formatter': 'detailed',
+            'stream': 'ext://sys.stdout',
+        },
+        'rotatingfile': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'NOTSET',
+            'formatter': 'detailed',
+            'filename': __file__.split('.')[0] + "_rot.log",
+            'mode': 'a',
+            'maxBytes': 10485760,
+            'backupCount': 5,
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'level': 'NOTSET',
+            'formatter': 'detailed',
+            'filename': __file__.split('.')[0] + ".log",
+            'mode': 'w',
+        },
+        'filecsv': {
+            'class': 'logging.FileHandler',
+            'level': 'NOTSET',
+            'formatter': 'csv1',
+            'filename': __file__.split('.')[0] + ".csv",
+            'mode': 'w',
+        },
+        'tcp': {
+            'class': 'logging.handlers.SocketHandler',
+            'level': 'NOTSET',
+            'host': '127.0.0.1',
+            'port': 9020,
+            'formatter': 'detailed',
+        },
+    },
+
+    # ----- FORMATTERS -----------------#
+    'formatters': {
+        'detailed': {
+            'format': '%(asctime)s %(module)-17s line:%(lineno)-4d %(funcName)s() ' \
+                      '%(levelname)-8s %(message)s',
+        },
+        'csv1': {
+            'format': '%(asctime)s,%(module)-4s,line:%(lineno)-4d,%(funcName)s(),' \
+                      '%(levelname)-4s,%(message)s',
+        },
+        'email': {
+            'format': 'Timestamp: %(asctime)s\nModule: %(module)s\n' \
+                      'Line: %(lineno)d\nMessage: %(message)s',
+        },
+    },
+}
+
+logging.config.dictConfig(LOG_SETTINGS)
+logger = logging.getLogger("root")
+logger.enable = True
+
+
+logger.info("==== starting Encfsgtk logging =====")
+
 
 
 #--------------------------------------------------#
@@ -43,10 +121,15 @@ class Base:
     Main window class
     """
 
+
     def __init__(self):
+
+        logger.info("Starting main window")
 
         import os
         self.configfile = os.path.expanduser('~/.encfsgui.db')
+
+        self.user_process = None
 
         #self.configfile = "~/encfsgui.db"
 
@@ -62,7 +145,12 @@ class Base:
 
 
         with  tempfile.NamedTemporaryFile(suffix=".png", delete=True) as temp:
+            logger.debug("Creating temporary file")
+
             icon = temp.name
+
+            logger.debug("icon = %s" % icon)
+
             fp = open(icon, "wb")
             fp.write(base64.b64decode(icondata))
             fp.close()
@@ -237,6 +325,7 @@ class Base:
 
 
     def main(self):
+        logger.info("Entering window main loop")
         gtk.main()
 
     #----------- GUI Signals -------------- #
@@ -246,12 +335,19 @@ class Base:
         Kill the app when the app is closed
         """
         #print "App closed"
+
+
+        if self.user_process is not None:
+            self.user_process.kill()
+
+        logger.info("Quit application")
         gtk.main_quit()
 
     def open_encrypted(self, widget, data=None):
 
         from subprocess import Popen, PIPE
 
+        logger.info("Opening encrypted volume")
         #print "Mounting encrypted volume"
         #print "Encrypted", self.entry_enc.get_text()
         #print "Mounted", self.entry_mnt.get_text()
@@ -261,14 +357,19 @@ class Base:
         password = self.entry_pass.get_text()
         cmdo = self.entry_cmd_opened.get_text()
 
+        logger.debug({'encp':encp, 'mntp':mntp, 'password': password, 'cmdo': cmdo})
+
         if password == "":
             return
 
         self.enc = Encfs()
         status = self.enc.open(encp, mntp, password)
 
+        logger.debug("status : %s" % status)
+
         if cmdo !="":
-            Popen(cmdo, shell=True, stdin=PIPE, stderr=PIPE, stdout=PIPE)
+            self.user_process = Popen(cmdo, shell=True)
+            logger.debug("self.user_process.pid = " %  self.user_process.pid)
 
         #print "--------opened -----------"
 
@@ -284,6 +385,10 @@ class Base:
         #print "Closing encrypted volume"
         #print "Encrypted", self.entry_enc.get_text()
         #print "Mounted", self.entry_mnt.get_text()
+        logger.info("Closing encrypted volume")
+
+        if self.user_process is not None:
+            self.user_process.kill()
 
         self.enc.close()
 
@@ -291,13 +396,21 @@ class Base:
         import os
         import shelve
 
+        logger.info("Text changed")
+
         name = self.combo.get_active_text()
 
-
+        logger.debug("name: %s" % name)
 
         if os.path.exists(self.configfile):
+            logger.debug("Exists configfile = %s " % self.configfile)
+
+
             d = shelve.open(self.configfile)
             volumes = d['volumes']
+
+            logger.debug("volumes = %s" % volumes)
+
             #print "volumes =", str(volumes)
 
             #print "p1"
@@ -315,6 +428,10 @@ class Base:
                 mnt = data['mnt']
                 password = data['password']
                 cmdo = data['cmdo']
+
+                logger.debug({'data': data, 'enc': enc, 'mnt': mnt, 'password': password, 'cmdo': cmdo})
+
+
                 self.entry_enc.set_text(enc)
                 self.entry_mnt.set_text(mnt)
                 self.entry_pass.set_text(password)
@@ -334,6 +451,8 @@ class Base:
 
 
     def save_data(self, widgt, data=None):
+
+        logger.info("Saving data")
 
         import shelve
         d = shelve.open(self.configfile)

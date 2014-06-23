@@ -4,13 +4,83 @@
 
 """
 
-#-------------------------------------------------#
-# ============== IMPORTS =========================#
-#
+import os
+import logging
+import logging.config
+LOG_SETTINGS = {
+    # --------- GENERAL OPTIONS ---------#
+    'version': 1,
+    'disable_existing_loggers': False,
 
-#--------------------------------------------------#
-# ============ GLOBAL VARIABLES ===================#
-#
+    # ---------- LOGGERS ---------------#
+    'root': {
+        'level': 'NOTSET',
+        'handlers': ['filecsv', 'file', 'console'],
+    },
+
+    # ---------- HANDLERS ---------------#
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+            'formatter': 'detailed',
+            'stream': 'ext://sys.stdout',
+        },
+        'rotatingfile': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'NOTSET',
+            'formatter': 'detailed',
+            'filename': __file__.split('.')[0] + "_rot.log",
+            'mode': 'a',
+            'maxBytes': 10485760,
+            'backupCount': 5,
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'level': 'NOTSET',
+            'formatter': 'detailed',
+            'filename': __file__.split('.')[0] + ".log",
+            'mode': 'w',
+        },
+        'filecsv': {
+            'class': 'logging.FileHandler',
+            'level': 'NOTSET',
+            'formatter': 'csv1',
+            'filename': __file__.split('.')[0] + ".csv",
+            'mode': 'w',
+        },
+        'tcp': {
+            'class': 'logging.handlers.SocketHandler',
+            'level': 'NOTSET',
+            'host': '127.0.0.1',
+            'port': 9020,
+            'formatter': 'detailed',
+        },
+    },
+
+    # ----- FORMATTERS -----------------#
+    'formatters': {
+        'detailed': {
+            'format': '%(asctime)s %(module)-17s line:%(lineno)-4d %(funcName)s() ' \
+                      '%(levelname)-8s %(message)s',
+        },
+        'csv1': {
+            'format': '%(asctime)s,%(module)-4s,line:%(lineno)-4d,%(funcName)s(),' \
+                      '%(levelname)-4s,%(message)s',
+        },
+        'email': {
+            'format': 'Timestamp: %(asctime)s\nModule: %(module)s\n' \
+                      'Line: %(lineno)d\nMessage: %(message)s',
+        },
+    },
+}
+
+logging.config.dictConfig(LOG_SETTINGS)
+logger = logging.getLogger("root")
+logger.enable = True
+
+
+logger.info("==== starting logging =====")
 
 
 default_keyfile =".encfs6.xml"
@@ -33,6 +103,8 @@ def create_encfs(encdir, plaindir, password=""):
     encdir = os.path.expanduser(encdir)
     plaindir = os.path.expanduser(plaindir)
 
+    logger.info({"encdir": encdir, "plaindir": plaindir, "password": password})
+
     if not os.path.isdir(encdir):
         mkdir(encdir)
 
@@ -44,34 +116,56 @@ def create_encfs(encdir, plaindir, password=""):
 
 
     cmd = " ".join(["encfs", "--standard" ,'--extpass="%s"' % password ,encdir, plaindir])
+
+    logger.info("cmd %s" % cmd)
+
     r = call(cmd, shell=True, stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
+    logger.info("r = %s" % r)
 
     if r != 0:
         return "Error -- encfs volume already exists"
 
 
 def open_encfs(encdir, plaindir, password, keyfile=""):
-    from subprocess import call, PIPE, STDOUT
+    from subprocess import call, PIPE,Popen, STDOUT
     import sys
 
-    print "keyfile =", keyfile
+
+    logger.debug(dict(zip(['encdir', 'plaindir', 'password', 'keyfile'],[encdir, plaindir, password, keyfile])))
+
 
     mkdir(encdir)
     mkdir(plaindir)
 
     if keyfile !="":
-
         keyfile = "ENCFS6_CONFIG=%s" % keyfile
 
-    cmd = " ".join([keyfile, "encfs", "--standard" ,'--extpass="echo %s"' % password ,encdir, plaindir])
+    logger.debug("keyfile = %s " % keyfile)
 
-    print cmd
+    cmd = " ".join([keyfile, "encfs", "-o nonempty", "--standard" ,'--extpass="echo %s"' % password ,encdir, plaindir])
 
+    logger.debug("cmd = %s " % cmd)
+
+    #print cmd
+
+    # Returns 1 - If not sucessful and 0 if sucessful
     r = call(cmd, shell=True, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-    return r
+    logger.debug("r = %s" % r)
+
+    if r == 0:
+        return True
+    else:
+        return False
+
 
 
 class Encfs():
+    """
+    Wrapper class to encfs encryption tool.
+
+
+    """
 
     def __init__(self):
         self.encdir   = ""
@@ -87,6 +181,10 @@ class Encfs():
         encdir -- Encrypted directory
         plaindir -- Plain directory
         """
+        logger.info("start Encfs.open()")
+
+        logger.debug(dict(zip(["encdir", "plaindir", "password", "keyfile", "mount"],
+                              [encdir, plaindir, password, keyfile, mount] )))
 
         import os
 
@@ -97,17 +195,30 @@ class Encfs():
 
         if mount:
             #create_encfs(encdir, plaindir, password)
-            open_encfs(encdir, plaindir, password, keyfile)
+            status = open_encfs(encdir, plaindir, password, keyfile)
+            logger.debug("status = %s" % status)
 
             if keyfile == "":
                 keyfile = os.path.join(encdir, default_keyfile)
+
+                logger.debug("keyfile = %s" % keyfile)
+
                 self.keyfile = keyfile
 
             fp = open(keyfile)
             self.keydata = fp.read()
+            logger.debug("self.keydata : %s" % self.keydata)
+
             fp.close()
 
+            return status
+
+        return None
+
     def mount(self, plaindir="", password ="", keyfile=""):
+
+        logger.info("Mounting directory")
+        logger.debug({"plaindir": plaindir, "password": password, "keyfile": keyfile})
 
         if plaindir == "":
             plaindir = self.plaindir
@@ -117,7 +228,8 @@ class Encfs():
         else:
             _password = password
 
-        self.open(self.encdir, plaindir, _password, keyfile)
+        return self.open(self.encdir, plaindir, _password, keyfile)
+
 
 
     def create(self, password, encdir="", keyfile=""):
@@ -134,7 +246,6 @@ class Encfs():
 
         plaindir = tempfile.mkdtemp()
         self.plaindir = plaindir
-
 
 
         if keyfile == '':
@@ -189,14 +300,21 @@ class Encfs():
         Unmount encrypted directory
         """
 
+        #from subprocess import call
+        from subprocess import Popen, PIPE
+        #call(["fusermount", "-uz" ,self.plaindir])
+        from subprocess import Popen, PIPE
 
-        from subprocess import Popen, PIPE, STDOUT
-        proc = Popen(["fusermount", "-uz" ,self.plaindir])
+        logger.info("Closing encrypted volume")
+
+        p = Popen(["fusermount", "-uz" ,self.plaindir], stderr=PIPE, stdout=PIPE, stdin=PIPE)
+        out, err = p.communicate()
+        logger.debug({"out": out, "err": err})
 
     def __show__(self):
         txt  = "\nencdir\t" + self.encdir
         txt += "\nplaindir\t" + self.plaindir
-        txt += "\npassword\t" + self.password
+        #txt += "\npassword\t" + self.password
         txt += "\nkeyfile\t" + self.keyfile
 
         return txt
