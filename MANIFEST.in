@@ -1,0 +1,3 @@
+include *.txt *.md *. LICENSE
+include docs/*.html
+include *.png *.desktop
