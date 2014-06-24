@@ -1,7 +1,6 @@
 encfsgtk
 ========
 
-#encfs @cloud #encryption #gui #cypher #protection
 
 A user friendly gtk graphical interface to encfs encryption tool. Can be used to protect sensitive data or data stored in the cloud. This script only was tested in Ubuntu GNU/Linux, but it's possible to be toiled to others OS.
 
