@@ -23,7 +23,7 @@ INSTALL_REQUIRES = ['gtk>=2.0', 'pygtk']
 PACKAGE_DATA =   {}
 KEYWORDS = ['encryption', 'security', 'data', 'encfs', 'cypher']
 #
-URL = ""
+URL = "https://github.com/wolfprogrammer/encfsgtk"
 CLASSIFIERS = [
     'Programming Language :: Python :: 2.7'
 ]
