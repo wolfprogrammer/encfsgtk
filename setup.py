@@ -19,7 +19,7 @@ LICENSE = 'BSD'
 DESCRIPTION = """Graphical user interface for Encfs encryption tool ( a file level encryption tool """
 
 PLATFORMS = ['Linux', 'Unix']
-INSTALL_REQUIRES = ['gtk>=2.0', 'pygtk']
+INSTALL_REQUIRES = [] #['gtk>=2.0', 'pygtk']
 PACKAGE_DATA =   {}
 KEYWORDS = ['encryption', 'security', 'data', 'encfs', 'cypher']
 #

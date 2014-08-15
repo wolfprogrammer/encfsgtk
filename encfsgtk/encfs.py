@@ -155,7 +155,7 @@ def open_encfs(encdir, plaindir, password, keyfile=""):
         keyfile = "ENCFS6_CONFIG=%s" % keyfile
 
     log.debug("keyfile = %s " % keyfile)
-
+	#  "-o", "allow_other"
     cmd = " ".join([keyfile, "encfs", "-o nonempty", "--standard" ,'--extpass="echo %s"' % password ,encdir, plaindir])
 
     log.debug("cmd = %s " % cmd)
