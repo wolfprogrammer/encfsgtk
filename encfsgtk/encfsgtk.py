@@ -409,7 +409,7 @@ class Base:
 
         if cmdo !="":
             self.user_process = Popen(cmdo, shell=True, preexec_fn=os.setsid)
-            log.debug("self.user_process.pid = " %  self.user_process.pid)
+            #log.debug("self.user_process.pid = " %  self.user_process.pid)
 
         #print "--------opened -----------"
 
@@ -514,8 +514,7 @@ class Base:
         enc = self.entry_enc.get_text()
         mnt = self.entry_mnt.get_text()
         cmdo = self.entry_cmd_opened.get_text()
-
-
+        
         name = str(name)
         enc  = str(enc)
         mnt  = str(mnt)

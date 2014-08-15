@@ -1,0 +1,14 @@
+*.o
+*.pyc
+*.bin
+*.exe
+*.log
+*.pdf
+*.pyo
+encfsgtk.egg
+*.zip
+*.build
+build
+dist
+.idea
+encfsgtk.egg-info

@@ -141,37 +141,28 @@ def create_encfs(encdir, plaindir, password=""):
 
 
 def open_encfs(encdir, plaindir, password, keyfile=""):
-    from subprocess import call, PIPE,Popen, STDOUT
-    import sys
-
-
-    log.debug(dict(zip(['encdir', 'plaindir', 'password', 'keyfile'],[encdir, plaindir, password, keyfile])))
-
+    from subprocess import  PIPE,Popen
 
     mkdir(encdir)
     mkdir(plaindir)
 
-    if keyfile !="":
-        keyfile = "ENCFS6_CONFIG=%s" % keyfile
-
-    log.debug("keyfile = %s " % keyfile)
-	#  "-o", "allow_other"
-    cmd = " ".join([keyfile, "encfs", "-o nonempty", "--standard" ,'--extpass="echo %s"' % password ,encdir, plaindir])
-
-    log.debug("cmd = %s " % cmd)
+    #  "-o", "allow_other"
 
     #print cmd
+    env = os.environ.copy()
+    if keyfile:
+        env['ENCFS6_CONFIG'] = keyfile
 
+    cmd = ["/usr/bin/encfs", "-o", "nonempty", "--standard", "-S", encdir, plaindir]
     # Returns 1 - If not sucessful and 0 if sucessful
-    r = call(cmd, shell=True, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-    log.debug("r = %s" % r)
-
-    if r == 0:
-        return True
-    else:
+    try:
+        p = Popen(cmd,  stdout=PIPE, stdin=PIPE, stderr=PIPE, env=env)
+        out = p.communicate(password)
+    except Exception as err:
+        print str(err)
         return False
 
-
+    return p.returncode == 0
 
 class Encfs():
     """
@@ -185,7 +176,6 @@ class Encfs():
         self.plaindir = ""
         self.password = ""
         self.keyfile = ""
-
 
     def open(self, encdir, plaindir="", password="", keyfile="", mount=True):
         """
@@ -243,8 +233,6 @@ class Encfs():
 
         return self.open(self.encdir, plaindir, _password, keyfile)
 
-
-
     def create(self, password, encdir="", keyfile=""):
         """
         Create encrypted directory only, however
@@ -297,8 +285,6 @@ class Encfs():
             p.close()
 
         #self.plaindir = ""
-
-
 
     def newkey(self, password):
 
